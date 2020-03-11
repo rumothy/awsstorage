@@ -3,8 +3,6 @@ const multer = require("multer");
 const AWS = require("aws-sdk");
 const fs = require("fs");
 const keys = require("./keys.js");
-const { createAudio } = require("node-mp3-player");
-const Audio = createAudio();
 
 const app = express();
 
@@ -91,21 +89,6 @@ function retrieveFile(filename, res) {
     }
   });
 }
-
-async function playFile() {
-  //https://rumdevbucket.s3.us-east-2.amazonaws.com/Oooooo.mp3
-  (async () => {
-    const myFile = await Audio(
-      `https://rumdevbucket.s3.us-east-2.amazonaws.com/Oooooo.mp3`
-    );
-    await myFile.volume(0.5);
-    const currentVolume = await myFile.volume(); // 0.5
-    await myFile.loop();
-    await myFile.stop();
-  })();
-}
-
-function play(filename) {}
 
 app.listen(3000, () => {
   console.log("Server running on port 3000");
