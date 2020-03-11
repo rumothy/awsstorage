@@ -1,0 +1,105 @@
+const express = require("express");
+const multer = require("multer");
+const AWS = require("aws-sdk");
+const fs = require("fs");
+const keys = require("./keys.js");
+const { createAudio } = require("node-mp3-player");
+const Audio = createAudio();
+
+const app = express();
+
+const storage = multer.diskStorage({
+  destination: "uploads/",
+  filename: function(req, file, cb) {
+    cb(null, file.originalname);
+  }
+});
+const upload = multer({ storage: storage });
+
+AWS.config.update({
+  accessKeyId: keys.iam_access_id,
+  secretAccessKey: keys.iam_secret,
+  region: keys.bucket_region
+});
+
+const s3 = new AWS.S3();
+
+app.post("/post_file", upload.single("demo_file"), function(req, res) {
+  uploadFile(req.file.path, req.file.filename, res);
+});
+
+app.get("/get_file/:file_name", (req, res) => {
+  retrieveFile(req.params.file_name, res);
+});
+
+app.get("/play_file/:filename", (req, res) => {
+  const getParams = {
+    Bucket: keys.bucket_name,
+    Key: req.params.filename
+  };
+  let awsReq = s3.getObject(getParams, function(err, data) {
+    if (err) {
+      return res.status(400).send({ success: false, err: err });
+    }
+  });
+  let readStream = awsReq.createReadStream();
+  readStream.pipe(res);
+});
+
+function uploadFile(source, targetName, res) {
+  console.log("preparing to upload...");
+  fs.readFile(source, function(err, filedata) {
+    if (!err) {
+      const putParams = {
+        Bucket: keys.bucket_name,
+        Key: targetName,
+        Body: filedata
+      };
+      s3.putObject(putParams, function(err, data) {
+        if (err) {
+          console.log("Could not upload the file", err);
+          return res.send({ success: false });
+        } else {
+          fs.unlink(source, () => {});
+          console.log("Successfully uploaded the file");
+          return res.send({ success: true });
+        }
+      });
+    } else {
+      console.log({ err: err });
+    }
+  });
+}
+
+function retrieveFile(filename, res) {
+  const getParams = {
+    Bucket: keys.bucket_name,
+    Key: filename
+  };
+  s3.getObject(getParams, function(err, data) {
+    if (err) {
+      return res.status(400).send({ success: false, err: err });
+    } else {
+      return res.send(data.Body);
+    }
+  });
+}
+
+async function playFile() {
+  //https://rumdevbucket.s3.us-east-2.amazonaws.com/Oooooo.mp3
+  (async () => {
+    const myFile = await Audio(
+      `https://rumdevbucket.s3.us-east-2.amazonaws.com/Oooooo.mp3`
+    );
+    await myFile.volume(0.5);
+    const currentVolume = await myFile.volume(); // 0.5
+    await myFile.loop();
+    await myFile.stop();
+  })();
+}
+
+function play(filename) {}
+
+app.listen(3000, () => {
+  console.log("Server running on port 3000");
+});
