@@ -32,18 +32,25 @@ app.get("/get_file/:file_name", (req, res) => {
   retrieveFile(req.params.file_name, res);
 });
 
+// https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/requests-using-stream-objects.html
 app.get("/play_file/:filename", (req, res) => {
   const getParams = {
     Bucket: keys.bucket_name,
     Key: req.params.filename
   };
-  let awsReq = s3.getObject(getParams, function(err, data) {
-    if (err) {
-      return res.status(400).send({ success: false, err: err });
-    }
+  let s3Stream = s3.getObject(getParams).createReadStream();
+  s3Stream.on("error", err => {
+    console.error(err);
   });
-  let readStream = awsReq.createReadStream();
-  readStream.pipe(res);
+
+  s3Stream
+    .pipe(res)
+    .on("error", err => {
+      console.error("File Stream:", err);
+    })
+    .on("close", () => {
+      console.log("Done.");
+    });
 });
 
 function uploadFile(source, targetName, res) {
