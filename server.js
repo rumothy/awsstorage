@@ -95,5 +95,5 @@ function retrieveFile(filename, res) {
 }
 
 app.listen(PORT, function() {
-  console.log(`Go http://localhost:${PORT}`);
+  console.log(`🌎  ==> API Server now listening on PORT ${PORT}!`);
 });
