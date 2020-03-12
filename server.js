@@ -26,6 +26,10 @@ app.post("/post_file", upload.single("demo_file"), function(req, res) {
   uploadFile(req.file.path, req.file.filename, res);
 });
 
+app.get("/", (req, res) => {
+  res.send("awsstorage running...");
+});
+
 app.get("/get_file/:file_name", (req, res) => {
   retrieveFile(req.params.file_name, res);
 });
