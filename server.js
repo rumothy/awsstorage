@@ -3,7 +3,7 @@ const multer = require("multer");
 const AWS = require("aws-sdk");
 const fs = require("fs");
 const keys = require("./keys.js");
-
+const PORT = process.env.PORT || 3001;
 const app = express();
 
 const storage = multer.diskStorage({
@@ -94,6 +94,6 @@ function retrieveFile(filename, res) {
   });
 }
 
-app.listen(3000, () => {
-  console.log("Server running on port 3000");
+app.listen(PORT, function() {
+  console.log(`Go http://localhost:${PORT}`);
 });
