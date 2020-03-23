@@ -2,7 +2,7 @@ const express = require("express");
 const multer = require("multer");
 const AWS = require("aws-sdk");
 const fs = require("fs");
-const keys = require("./keys.js");
+const keys = require("./private/keys.js");
 const PORT = process.env.PORT || 3001;
 const app = express();
 
